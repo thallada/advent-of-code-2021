@@ -1,6 +1,6 @@
-use std::time::Instant;
-
 use anyhow::Result;
+use common::instrument;
+use std::time::Instant;
 
 const INPUT: &str = include_str!("input/input.txt");
 
@@ -41,13 +41,7 @@ fn solve_part2(input: &str) -> Result<i32> {
 }
 
 fn main() {
-    let mut now = Instant::now();
-    println!("Part 1: {}", solve_part1(INPUT).unwrap());
-    println!("(elapsed: {:?})", now.elapsed());
-    now = Instant::now();
-    println!("");
-    println!("Part 2: {}", solve_part2(INPUT).unwrap());
-    println!("(elapsed: {:?})", now.elapsed());
+    instrument!(solve_part1(INPUT).unwrap(), solve_part2(INPUT).unwrap());
 }
 
 #[cfg(test)]
