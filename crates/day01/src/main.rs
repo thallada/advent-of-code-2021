@@ -1,6 +1,5 @@
 use anyhow::Result;
 use common::instrument;
-use std::time::Instant;
 
 const INPUT: &str = include_str!("input/input.txt");
 
