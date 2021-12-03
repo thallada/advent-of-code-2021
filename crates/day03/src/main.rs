@@ -52,29 +52,17 @@ fn solve_part2(input: &str) -> Result<i32> {
 
         if oxygen.len() > 1 {
             if oxygen_most_common[i] as f32 >= (oxygen.len() as f32 / 2.0) {
-                oxygen = oxygen
-                    .into_iter()
-                    .filter(|l| l.chars().nth(i).unwrap() == '1')
-                    .collect();
+                oxygen.retain(|l| l.chars().nth(i).unwrap() == '1');
             } else {
-                oxygen = oxygen
-                    .into_iter()
-                    .filter(|l| l.chars().nth(i).unwrap() == '0')
-                    .collect();
+                oxygen.retain(|l| l.chars().nth(i).unwrap() == '0');
             }
         }
 
         if co2.len() > 1 {
             if co2_most_common[i] as f32 >= (co2.len() as f32 / 2.0) {
-                co2 = co2
-                    .into_iter()
-                    .filter(|l| l.chars().nth(i).unwrap() == '0')
-                    .collect();
+                co2.retain(|l| l.chars().nth(i).unwrap() == '0');
             } else {
-                co2 = co2
-                    .into_iter()
-                    .filter(|l| l.chars().nth(i).unwrap() == '1')
-                    .collect();
+                co2.retain(|l| l.chars().nth(i).unwrap() == '1');
             }
         }
 
