@@ -1,6 +1,5 @@
 use anyhow::Result;
 use common::instrument;
-use std::collections::HashMap;
 
 const INPUT: &str = include_str!("input/input.txt");
 
@@ -15,20 +14,9 @@ fn simulate_day(fish: &mut Vec<u8>) {
     }
 }
 
-fn simulate_day_with_map(fish_map: &HashMap<u8, u64>) -> HashMap<u8, u64> {
-    let mut new_map = HashMap::new();
-    for (day, count) in fish_map.into_iter() {
-        if *day == 0 {
-            let day8 = new_map.entry(8).or_insert(0);
-            *day8 += count;
-            let day6 = new_map.entry(6).or_insert(0);
-            *day6 += count;
-        } else {
-            let day_minus = new_map.entry(day - 1).or_insert(0);
-            *day_minus += count;
-        }
-    }
-    new_map
+fn simulate_day_with_map(fish_map: &mut [u64; 9]) {
+    fish_map.rotate_left(1);
+    fish_map[6] += fish_map[8];
 }
 
 fn solve_part1(input: &str) -> Result<usize> {
@@ -52,18 +40,17 @@ fn solve_part2(input: &str) -> Result<u64> {
         .map(|num| num.parse::<u8>())
         .collect::<Result<Vec<_>, std::num::ParseIntError>>()?;
 
-    let mut fish_map: HashMap<u8, u64> = HashMap::new();
+    let mut fish_map = [0; 9];
 
-    for f in fish.iter() {
-        let count = fish_map.entry(*f).or_insert(0);
-        *count += 1;
+    for f in fish.into_iter() {
+        fish_map[f as usize] += 1;
     }
 
     for _ in 0..256 {
-        fish_map = simulate_day_with_map(&fish_map);
+        simulate_day_with_map(&mut fish_map);
     }
 
-    Ok(fish_map.values().sum())
+    Ok(fish_map.iter().sum())
 }
 
 fn main() {
