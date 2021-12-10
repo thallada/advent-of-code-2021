@@ -15,7 +15,13 @@ fn parse_grid(input: &str) -> Result<Vec<Vec<u32>>> {
         .collect::<Result<Vec<_>>>()
 }
 
-fn get_low_points(grid: &[Vec<u32>]) -> Vec<u32> {
+struct LowPoint {
+    x: usize,
+    y: usize,
+    height: u32,
+}
+
+fn get_low_points(grid: &[Vec<u32>]) -> Vec<LowPoint> {
     let mut low_points = Vec::new();
     for y in 0..grid.len() {
         for x in 0..grid[y].len() {
@@ -25,7 +31,11 @@ fn get_low_points(grid: &[Vec<u32>]) -> Vec<u32> {
                 && (x == 0 || grid[y][x - 1] > current)
                 && (x == grid[y].len() - 1 || grid[y][x + 1] > current)
             {
-                low_points.push(grid[y][x]);
+                low_points.push(LowPoint {
+                    x,
+                    y,
+                    height: grid[y][x],
+                });
             }
         }
     }
@@ -66,24 +76,15 @@ fn solve_part1(input: &str) -> Result<u32> {
 
     let low_points = get_low_points(&grid);
 
-    Ok(low_points.into_iter().map(|p| p + 1).sum())
+    Ok(low_points.into_iter().map(|p| p.height + 1).sum())
 }
 
 fn solve_part2(input: &str) -> Result<u32> {
     let grid = parse_grid(input)?;
 
-    let mut basin_sizes = Vec::new();
-    for y in 0..grid.len() {
-        for x in 0..grid[y].len() {
-            let current = grid[y][x];
-            if (y == 0 || grid[y - 1][x] > current)
-                && (y == grid.len() - 1 || grid[y + 1][x] > current)
-                && (x == 0 || grid[y][x - 1] > current)
-                && (x == grid[y].len() - 1 || grid[y][x + 1] > current)
-            {
-                basin_sizes.push(get_basin_size(&grid, x, y));
-            }
-        }
+    let mut basin_sizes = vec![];
+    for low_point in get_low_points(&grid) {
+        basin_sizes.push(get_basin_size(&grid, low_point.x, low_point.y));
     }
 
     basin_sizes.sort_unstable();
