@@ -76,37 +76,23 @@ impl Cavern {
 
     fn flash(&mut self, x: usize, y: usize) -> Vec<(usize, usize)> {
         let mut to_visit = vec![];
-        if y > 0 {
-            self.grid[y - 1][x] += 1;
-            to_visit.push((x, y - 1));
-        }
-        if y < 9 {
-            self.grid[y + 1][x] += 1;
-            to_visit.push((x, y + 1));
-        }
-        if x > 0 {
-            self.grid[y][x - 1] += 1;
-            to_visit.push((x - 1, y));
-        }
-        if x < 9 {
-            self.grid[y][x + 1] += 1;
-            to_visit.push((x + 1, y));
-        }
-        if y > 0 && x > 0 {
-            self.grid[y - 1][x - 1] += 1;
-            to_visit.push((x - 1, y - 1));
-        }
-        if y > 0 && x < 9 {
-            self.grid[y - 1][x + 1] += 1;
-            to_visit.push((x + 1, y - 1));
-        }
-        if y < 9 && x > 0 {
-            self.grid[y + 1][x - 1] += 1;
-            to_visit.push((x - 1, y + 1));
-        }
-        if y < 9 && x < 9 {
-            self.grid[y + 1][x + 1] += 1;
-            to_visit.push((x + 1, y + 1));
+        for (dx, dy) in vec![
+            (-1, -1),
+            (-1, 0),
+            (-1, 1),
+            (0, -1),
+            (0, 0),
+            (0, 1),
+            (1, -1),
+            (1, 0),
+            (1, 1),
+        ] {
+            let (x, y) = (x as isize + dx, y as isize + dy);
+            if y >= 0 && y < 10 && x >= 0 && x < 10 {
+                let (x, y) = (x as usize, y as usize);
+                self.grid[y][x] += 1;
+                to_visit.push((x, y));
+            }
         }
         to_visit
     }
