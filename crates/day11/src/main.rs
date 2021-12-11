@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Error, Result};
 use common::instrument;
-use std::fmt;
+use std::fmt::{self, Display, Formatter};
 use std::str::FromStr;
 
 const INPUT: &str = include_str!("input/input.txt");
@@ -24,8 +24,8 @@ impl FromStr for Cavern {
     }
 }
 
-impl fmt::Display for Cavern {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl Display for Cavern {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         for y in 0..10 {
             for x in 0..10 {
                 if self.grid[y][x] > 9 {
