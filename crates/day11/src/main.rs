@@ -1,5 +1,6 @@
 use anyhow::{anyhow, Error, Result};
 use common::instrument;
+use std::collections::HashSet;
 use std::fmt::{self, Display, Formatter};
 use std::str::FromStr;
 
@@ -13,13 +14,15 @@ impl FromStr for Cavern {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self> {
-        let mut grid: [[u8; 10]; 10] = [[0; 10]; 10];
+        let mut grid = [[0; 10]; 10];
+
         for (y, line) in s.trim().lines().enumerate() {
             for (x, char) in line.trim().chars().enumerate() {
                 let energy = char.to_digit(10).ok_or(anyhow!("Invalid energy level"))? as u8;
                 grid[y][x] = energy;
             }
         }
+
         Ok(Cavern { grid })
     }
 }
@@ -36,13 +39,15 @@ impl Display for Cavern {
             }
             write!(f, "\n")?;
         }
+
         Ok(())
     }
 }
 
 impl Cavern {
-    fn step(&mut self) -> Vec<(usize, usize)> {
-        let mut flashed = vec![];
+    fn step(&mut self) -> HashSet<(usize, usize)> {
+        let mut flashed = HashSet::new();
+
         for y in 0..10 {
             for x in 0..10 {
                 self.grid[y][x] += 1;
@@ -53,13 +58,13 @@ impl Cavern {
             for x in 0..10 {
                 let mut to_visit = vec![];
                 if self.grid[y][x] > 9 && !flashed.contains(&(x, y)) {
-                    flashed.push((x, y));
+                    flashed.insert((x, y));
                     to_visit.append(&mut self.flash(x, y));
 
                     while to_visit.len() > 0 {
                         let (x, y) = to_visit.pop().unwrap();
                         if self.grid[y][x] > 9 && !flashed.contains(&(x, y)) {
-                            flashed.push((x, y));
+                            flashed.insert((x, y));
                             to_visit.append(&mut self.flash(x, y));
                         }
                     }
@@ -71,11 +76,13 @@ impl Cavern {
                 }
             }
         }
+
         flashed
     }
 
     fn flash(&mut self, x: usize, y: usize) -> Vec<(usize, usize)> {
         let mut to_visit = vec![];
+
         for (dx, dy) in vec![
             (-1, -1),
             (-1, 0),
@@ -94,6 +101,7 @@ impl Cavern {
                 to_visit.push((x, y));
             }
         }
+
         to_visit
     }
 }
