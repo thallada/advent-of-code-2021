@@ -1,37 +1,35 @@
 use anyhow::{anyhow, Error, Result};
 use common::instrument;
 use std::collections::HashMap;
+use std::convert::TryFrom;
 use std::fmt::{self, Display, Formatter};
-use std::str::FromStr;
 
 const INPUT: &str = include_str!("input/input.txt");
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-enum Cave {
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+enum Cave<'a> {
     Start,
     End,
-    Small(String),
-    Big(String),
+    Small(&'a str),
+    Big(&'a str),
 }
 
-impl FromStr for Cave {
-    type Err = Error;
-
-    fn from_str(s: &str) -> Result<Self> {
+impl<'a> From<&'a str> for Cave<'a> {
+    fn from(s: &'a str) -> Self {
         if s == "start" {
-            Ok(Cave::Start)
+            Cave::Start
         } else if s == "end" {
-            Ok(Cave::End)
+            Cave::End
         } else {
             match s.chars().all(|c| c.is_uppercase()) {
-                true => Ok(Cave::Big(s.to_string())),
-                false => Ok(Cave::Small(s.to_string())),
+                true => Cave::Big(s),
+                false => Cave::Small(s),
             }
         }
     }
 }
 
-impl Display for Cave {
+impl<'a> Display for Cave<'a> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
             Cave::Start => write!(f, "start"),
@@ -43,24 +41,24 @@ impl Display for Cave {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-struct CaveSystem {
-    connections: HashMap<Cave, Vec<Cave>>,
+struct CaveSystem<'a> {
+    connections: HashMap<Cave<'a>, Vec<Cave<'a>>>,
 }
 
-impl FromStr for CaveSystem {
-    type Err = Error;
+impl<'a> TryFrom<&'a str> for CaveSystem<'a> {
+    type Error = Error;
 
-    fn from_str(s: &str) -> Result<Self> {
+    fn try_from(s: &'a str) -> Result<Self> {
         let mut connections = HashMap::new();
 
         for line in s.trim().lines() {
             let mut parts = line.split('-');
             let origin = parts.next().ok_or(anyhow!("missing origin"))?;
-            let origin = origin.parse::<Cave>()?;
+            let origin: Cave = origin.into();
             let destination = parts.next().ok_or(anyhow!("missing destination"))?;
-            let destination = destination.parse::<Cave>()?;
-            let entry = connections.entry(origin.clone()).or_insert_with(Vec::new);
-            entry.push(destination.clone());
+            let destination: Cave = destination.into();
+            let entry = connections.entry(origin).or_insert_with(Vec::new);
+            entry.push(destination);
             let entry = connections.entry(destination).or_insert_with(Vec::new);
             entry.push(origin);
         }
@@ -69,8 +67,8 @@ impl FromStr for CaveSystem {
     }
 }
 
-impl CaveSystem {
-    fn get_paths(&self, path: &Vec<Cave>, one_small_twice: bool) -> Result<Vec<Vec<Cave>>> {
+impl<'a> CaveSystem<'a> {
+    fn get_paths(&self, path: &Vec<Cave<'a>>, one_small_twice: bool) -> Result<Vec<Vec<Cave>>> {
         let mut paths = vec![];
         let origin = path.last().ok_or(anyhow!("empty path"))?;
 
@@ -80,38 +78,23 @@ impl CaveSystem {
                     Cave::Start => continue,
                     Cave::End => {
                         let mut path = path.clone();
-                        path.push(destination.clone());
+                        path.push(*destination);
                         Ok(vec![path])
                     }
                     Cave::Big(_) => {
                         let mut path = path.clone();
-                        path.push(destination.clone());
+                        path.push(*destination);
                         self.get_paths(&path, one_small_twice)
                     }
                     Cave::Small(_) => {
                         if !path.contains(destination) {
                             let mut path = path.clone();
-                            path.push(destination.clone());
+                            path.push(*destination);
                             self.get_paths(&path, one_small_twice)
                         } else if one_small_twice {
-                            let mut small_counts = HashMap::new();
-                            for small in path.iter().filter(|c| {
-                                if let Cave::Small(_) = c {
-                                    true
-                                } else {
-                                    false
-                                }
-                            }) {
-                                let entry = small_counts.entry(small.clone()).or_insert(0);
-                                *entry += 1;
-                            }
-                            if small_counts.values().any(|&count| count > 1) {
-                                continue;
-                            } else {
-                                let mut path = path.clone();
-                                path.push(destination.clone());
-                                self.get_paths(&path, one_small_twice)
-                            }
+                            let mut path = path.clone();
+                            path.push(*destination);
+                            self.get_paths(&path, false)
                         } else {
                             continue;
                         }
@@ -124,7 +107,7 @@ impl CaveSystem {
 }
 
 fn solve_part1(input: &str) -> Result<usize> {
-    let cave_system = input.parse::<CaveSystem>()?;
+    let cave_system: CaveSystem = input.try_into()?;
 
     let paths = cave_system.get_paths(&vec![Cave::Start], false)?;
 
@@ -132,7 +115,7 @@ fn solve_part1(input: &str) -> Result<usize> {
 }
 
 fn solve_part2(input: &str) -> Result<usize> {
-    let cave_system = input.parse::<CaveSystem>()?;
+    let cave_system: CaveSystem = input.try_into()?;
 
     let paths = cave_system.get_paths(&vec![Cave::Start], true)?;
 
